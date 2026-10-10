@@ -76,3 +76,4 @@ body{background:radial-gradient(1200px 600px at 50% -200px,#10203a 0,var(--bg) 6
 .search #sugg{bottom:auto;top:54px}
 .credit{font-size:13px;color:var(--mute);margin-top:10px;word-break:break-word}
 .end .card h2{margin-top:6px}
+.tagline{text-align:center;color:var(--mute);margin:0 0 12px;font-size:15px}
