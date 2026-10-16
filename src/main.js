@@ -148,13 +148,27 @@ function showEnd() {
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
 const NAMES = LIST.map(a => a.answer).sort()
 const input = $('guess'), list = $('sugg')
+function pinScroll() {
+  if (!$('end').hidden) return
+  if (window.scrollY) window.scrollTo(0, 0)
+  const main = document.getElementById('app')
+  if (main && main.scrollTop) main.scrollTop = 0
+}
+window.addEventListener('scroll', pinScroll, { passive: true })
 function setActive(i) {
   active = i
-  ;[...list.children].forEach((li, j) => { li.setAttribute('aria-selected', j === i); if (j === i) li.scrollIntoView({ block: 'nearest' }) })
+  ;[...list.children].forEach((li, j) => {
+    li.setAttribute('aria-selected', j === i)
+    if (j === i) {
+      const top = li.offsetTop, view = list.clientHeight
+      if (top < list.scrollTop) list.scrollTop = top
+      else if (top + li.offsetHeight > list.scrollTop + view) list.scrollTop = top + li.offsetHeight - view
+    }
+  })
   input.setAttribute('aria-activedescendant', i >= 0 ? 'opt' + i : '')
 }
 function close() { list.innerHTML = ''; matches = []; active = -1; $('combo').setAttribute('aria-expanded', 'false') }
-function pick(n) { picked = n; input.value = n; close(); $('submit').disabled = false; $('submit').focus() }
+function pick(n) { picked = n; input.value = n; close(); $('submit').disabled = false; $('submit').focus({ preventScroll: true }); pinScroll() }
 input.oninput = () => {
   picked = null; $('submit').disabled = !input.value.trim()
   const q = norm(input.value)
