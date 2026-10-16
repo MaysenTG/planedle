@@ -17,4 +17,4 @@ All photos come from Wikimedia Commons under free licences. The app only stores 
 
 ## Notes
 
-This is a non-commercial fan project with no ads. It was inspired by Heardle and Wordle.
+This is a fan project inspired by Heardle and Wordle. Banner ads are set in `src/ads.js`.

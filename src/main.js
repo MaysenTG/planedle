@@ -1,4 +1,5 @@
 import LIST from './aircraft.json'
+import { mountAds } from './ads.js'
 const ZOOM = [6, 4, 2.8, 2, 1.4, 1]
 const $ = id => document.getElementById(id)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
@@ -23,6 +24,35 @@ const seed = n => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Ma
 
 $('seg').innerHTML = ZOOM.map(() => '<div class="s" style="flex:1"><i></i></div>').join('')
 
+function fit() {
+  const photo = $('photo'), stack = document.querySelector('.stack'), clue = document.querySelector('.clue'), sugg = $('sugg')
+  if (!photo || !stack || !clue || !sugg) return
+  if (!$('end').hidden) { photo.style.width = ''; photo.style.height = ''; photo.style.aspectRatio = ''; sugg.style.maxHeight = ''; return }
+  const seg = $('seg'), hint = $('unlocked'), board = $('board')
+  const segStyle = getComputedStyle(seg)
+  const chrome = seg.offsetHeight + parseFloat(segStyle.marginTop) + parseFloat(segStyle.marginBottom) + hint.offsetHeight + (board.offsetHeight || 0) + 6
+  const maxW = clue.clientWidth
+  if (maxW < 40) return
+  const open = sugg.children.length > 0
+  const share = stack.clientHeight + (open ? sugg.offsetHeight : 0)
+  const room = Math.max(0, share - chrome)
+  const ideal = Math.min(room, maxW * 0.75)
+  const keep = Math.min(ideal, 220)
+  const suggMax = open ? Math.max(72, Math.min(150, room - keep)) : 0
+  const suggCss = open ? suggMax + 'px' : ''
+  if (sugg.style.maxHeight !== suggCss) sugg.style.maxHeight = suggCss
+  const avail = stack.clientHeight - chrome
+  const ph = Math.max(0, Math.min(avail, maxW * 0.75))
+  const pw = ph * 4 / 3
+  if (Math.abs(photo.offsetHeight - ph) < 2 && Math.abs(photo.offsetWidth - pw) < 2) return
+  photo.style.aspectRatio = 'auto'
+  photo.style.width = pw + 'px'
+  photo.style.height = ph + 'px'
+  document.getElementById('app').scrollTop = 0
+  window.scrollTo(0, 0)
+}
+new ResizeObserver(fit).observe(document.querySelector('.stack'))
+
 async function load() {
   const i = idx, a = LIST[i]
   $('img').removeAttribute('src'); $('loading').hidden = false
@@ -41,16 +71,17 @@ async function load() {
 }
 
 function render() {
-  $('board').innerHTML = ZOOM.map((_, i) => {
-    const g = state.guesses[i]
-    if (g === undefined) return `<li class="row ${i === state.guesses.length && !state.done ? 'next' : ''}"><span class="n">${i + 1}</span></li>`
+  const board = $('board')
+  board.innerHTML = state.guesses.map(g => {
     if (g === 'SKIP') return `<li class="row skip"><span class="ic" aria-hidden="true">⏭</span><span>Skipped</span></li>`
     if (g === 'RIGHT') return `<li class="row right"><span class="ic" aria-hidden="true">✓</span><span>${esc(item ? item.answer : 'Correct')}</span></li>`
     return `<li class="row wrong"><span class="ic" aria-hidden="true">✕</span><span>${esc(g)}</span></li>`
   }).join('')
+  board.scrollTop = board.scrollHeight
   const s = step()
   ;[...$('seg').children].forEach((el, i) => el.classList.toggle('on', i <= s))
-  $('unlocked').textContent = state.done ? 'Full photo' : `Zoom level ${s + 1} of 6`
+  const left = 6 - state.guesses.length
+  $('unlocked').textContent = state.done ? 'Full photo' : `Zoom level ${s + 1} of 6 · ${left} guess${left === 1 ? '' : 'es'} left`
   const img = $('img')
   img.style.transformOrigin = `${focus[0]}% ${focus[1]}%`
   img.style.transform = `scale(${ZOOM[s]})`
@@ -95,6 +126,10 @@ function countdown() {
 
 function showEnd() {
   $('game').hidden = true
+  $('newOne').hidden = true
+  $('dock').hidden = true
+  const endAd = document.querySelector('[data-ad="end"]')
+  if (endAd) endAd.hidden = false
   const e = $('end'); e.hidden = false
   const lic = item.licenseUrl ? `<a href="${esc(item.licenseUrl)}" target="_blank" rel="noopener">${esc(item.license)}</a>` : esc(item.license)
   e.innerHTML = `<p class="verdict ${state.won ? 'win' : 'lose'}">${state.won ? `You got it in ${state.guesses.length}!` : "Not today. Here's the answer."}</p>
@@ -102,7 +137,9 @@ function showEnd() {
   <p class="credit">Photo by ${esc(item.author)}, ${lic}, via <a href="${esc(item.page)}" target="_blank" rel="noopener">Wikimedia Commons</a></p></div>
   <p class="sq" aria-label="Your result">${squares()}</p>
   <button id="share" class="btn primary wide">Share result</button>
-  ${PRACTICE ? '<p class="next">Practice round. Stats are not saved.</p>' : `${statsHtml()}<p class="next">Next aircraft in <b id="cd">--:--:--</b></p>`}`
+  ${PRACTICE ? '<p class="next">Practice round. Stats are not saved.</p><button id="again" class="btn wide newsong">New aircraft</button>' : `${statsHtml()}<p class="next">Next aircraft in <b id="cd">--:--:--</b></p>`}`
+  const again = $('again')
+  if (again) again.onclick = newOne
   $('share').onclick = async () => {
     const txt = `Planedle ${PRACTICE ? 'practice' : '#' + (dayNum + 1)}\n✈️${squares()}\n${location.origin + location.pathname}`
     try { if (navigator.share && matchMedia('(pointer:coarse)').matches) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); $('share').textContent = 'Copied to clipboard' } } catch {}
@@ -114,18 +151,32 @@ function showEnd() {
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
 const NAMES = LIST.map(a => a.answer).sort()
 const input = $('guess'), list = $('sugg')
+function pinScroll() {
+  if (!$('end').hidden) return
+  if (window.scrollY) window.scrollTo(0, 0)
+  const main = document.getElementById('app')
+  if (main && main.scrollTop) main.scrollTop = 0
+}
+window.addEventListener('scroll', pinScroll, { passive: true })
 function setActive(i) {
   active = i
-  ;[...list.children].forEach((li, j) => { li.setAttribute('aria-selected', j === i); if (j === i) li.scrollIntoView({ block: 'nearest' }) })
+  ;[...list.children].forEach((li, j) => {
+    li.setAttribute('aria-selected', j === i)
+    if (j === i) {
+      const top = li.offsetTop, view = list.clientHeight
+      if (top < list.scrollTop) list.scrollTop = top
+      else if (top + li.offsetHeight > list.scrollTop + view) list.scrollTop = top + li.offsetHeight - view
+    }
+  })
   input.setAttribute('aria-activedescendant', i >= 0 ? 'opt' + i : '')
 }
 function close() { list.innerHTML = ''; matches = []; active = -1; $('combo').setAttribute('aria-expanded', 'false') }
-function pick(n) { picked = n; input.value = n; close(); $('submit').disabled = false; $('submit').focus() }
+function pick(n) { picked = n; input.value = n; close(); $('submit').disabled = false; $('submit').focus({ preventScroll: true }); pinScroll() }
 input.oninput = () => {
   picked = null; $('submit').disabled = !input.value.trim()
   const q = norm(input.value)
   if (!q) return close()
-  matches = LIST.filter(a => [a.answer, ...a.aliases].some(x => norm(x).includes(q))).map(a => a.answer).sort().slice(0, 8)
+  matches = LIST.filter(a => [a.answer, ...a.aliases].some(x => norm(x).includes(q))).map(a => a.answer).sort().slice(0, 6)
   list.innerHTML = ''; active = -1
   matches.forEach((n, i) => {
     const li = document.createElement('li'); li.id = 'opt' + i; li.setAttribute('role', 'option')
@@ -134,7 +185,9 @@ input.oninput = () => {
     list.appendChild(li)
   })
   $('combo').setAttribute('aria-expanded', matches.length > 0)
+  requestAnimationFrame(fit)
 }
+input.addEventListener('focus', () => requestAnimationFrame(fit))
 input.onkeydown = e => {
   if (e.key === 'ArrowDown' && matches.length) { e.preventDefault(); setActive((active + 1) % matches.length) }
   else if (e.key === 'ArrowUp' && matches.length) { e.preventDefault(); setActive((active - 1 + matches.length) % matches.length) }
@@ -156,15 +209,20 @@ $('helpBtn').onclick = () => $('help').showModal()
 $('statsBtn').onclick = () => { $('statsBody').innerHTML = statsHtml(); $('statsD').showModal() }
 document.querySelectorAll('dialog').forEach(d => d.onclick = e => { if (e.target === d) d.close() })
 if (!localStorage.getItem('pl-seen')) { localStorage.setItem('pl-seen', '1'); $('help').showModal() }
+mountAds(PRACTICE)
 
 function newOne() {
   const others = LIST.map((_, i) => i).filter(i => i !== idx)
   idx = others[Math.floor(Math.random() * others.length)]
   state = fresh(); item = null
-  $('end').hidden = true; $('end').innerHTML = ''; $('game').hidden = false
+  $('end').hidden = true; $('end').innerHTML = ''; $('dock').hidden = false; $('game').hidden = false; $('newOne').hidden = false
+  const endAd = document.querySelector('[data-ad="end"]')
+  if (endAd) endAd.hidden = true
   render(); load().then(() => say('New aircraft loaded')).catch(() => say('Could not load the photo. Try again.'))
 }
 if (PRACTICE) {
+  const robots = document.querySelector('meta[name="robots"]')
+  if (robots) robots.content = 'noindex, follow'
   $('mode').hidden = false; $('newOne').hidden = false; $('newOne').onclick = newOne
   newOne()
 } else {
