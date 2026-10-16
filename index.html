@@ -46,10 +46,10 @@
   </div>
   <div class="dock" id="dock">
     <div id="game">
-      <ul id="sugg" role="listbox" aria-label="Suggestions"></ul>
       <div class="search" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-owns="sugg" id="combo">
         <svg class="mag" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z" fill="currentColor"/></svg>
         <input id="guess" type="text" placeholder="Aircraft type, e.g. Boeing 737" autocomplete="off" aria-label="Guess the aircraft" aria-autocomplete="list" aria-controls="sugg">
+        <ul id="sugg" role="listbox" aria-label="Suggestions"></ul>
       </div>
       <div class="actions"><button id="skip" class="btn ghost">Skip (zoom out)</button><button id="submit" class="btn primary" disabled>Submit</button></div>
     </div>
