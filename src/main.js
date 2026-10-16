@@ -1,4 +1,5 @@
 import LIST from './aircraft.json'
+import { mountAds } from './ads.js'
 const ZOOM = [6, 4, 2.8, 2, 1.4, 1]
 const $ = id => document.getElementById(id)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
@@ -127,6 +128,8 @@ function showEnd() {
   $('game').hidden = true
   $('newOne').hidden = true
   $('dock').hidden = true
+  const endAd = document.querySelector('[data-ad="end"]')
+  if (endAd) endAd.hidden = false
   const e = $('end'); e.hidden = false
   const lic = item.licenseUrl ? `<a href="${esc(item.licenseUrl)}" target="_blank" rel="noopener">${esc(item.license)}</a>` : esc(item.license)
   e.innerHTML = `<p class="verdict ${state.won ? 'win' : 'lose'}">${state.won ? `You got it in ${state.guesses.length}!` : "Not today. Here's the answer."}</p>
@@ -206,15 +209,20 @@ $('helpBtn').onclick = () => $('help').showModal()
 $('statsBtn').onclick = () => { $('statsBody').innerHTML = statsHtml(); $('statsD').showModal() }
 document.querySelectorAll('dialog').forEach(d => d.onclick = e => { if (e.target === d) d.close() })
 if (!localStorage.getItem('pl-seen')) { localStorage.setItem('pl-seen', '1'); $('help').showModal() }
+mountAds(PRACTICE)
 
 function newOne() {
   const others = LIST.map((_, i) => i).filter(i => i !== idx)
   idx = others[Math.floor(Math.random() * others.length)]
   state = fresh(); item = null
   $('end').hidden = true; $('end').innerHTML = ''; $('dock').hidden = false; $('game').hidden = false; $('newOne').hidden = false
+  const endAd = document.querySelector('[data-ad="end"]')
+  if (endAd) endAd.hidden = true
   render(); load().then(() => say('New aircraft loaded')).catch(() => say('Could not load the photo. Try again.'))
 }
 if (PRACTICE) {
+  const robots = document.querySelector('meta[name="robots"]')
+  if (robots) robots.content = 'noindex, follow'
   $('mode').hidden = false; $('newOne').hidden = false; $('newOne').onclick = newOne
   newOne()
 } else {

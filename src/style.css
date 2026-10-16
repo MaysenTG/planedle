@@ -11,6 +11,16 @@ button,input{font:inherit;color:inherit}
 .icon:hover{border-color:var(--mute)}
 main{flex:1 1 auto;min-height:0;max-width:520px;width:100%;margin:0 auto;padding:8px 16px 0;display:flex;flex-direction:column;overflow:clip}
 .tagline{text-align:center;color:var(--mute);margin:0 0 6px;font-size:14px;flex-shrink:0}
+.adslot{flex-shrink:0;margin:0 0 8px;min-height:52px}
+.ad-label{display:block;margin:0 0 4px;color:var(--mute);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.ad-banner{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:#141821;text-decoration:none;color:inherit}
+.ad-banner:hover{border-color:var(--mute)}
+.ad-kicker{flex:none;padding:3px 6px;border-radius:999px;background:#2a2418;color:#e6c36a;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ad-copy{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.ad-copy b{font-size:14px}
+.ad-copy small{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-cta{flex:none;margin-left:auto;padding:6px 10px;border-radius:999px;background:#1d3a5c;color:var(--accent2);font-size:13px;font-weight:700}
+.noscript{max-width:520px;margin:12px auto;padding:0 16px;color:var(--mute);text-align:center}
 .mode{background:#2a1a22;border:1px solid #5a2a3a;border-radius:10px;padding:8px 12px;font-size:14px;margin:0 0 8px;text-align:center;flex-shrink:0}
 .stack{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .clue{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;width:100%}
@@ -75,7 +85,7 @@ html:has(#end:not([hidden])) .row{height:36px}
 .dist div{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:13px}.dist span{width:12px;color:var(--mute)}.dist i{font-style:normal;background:#2c2c38;border-radius:4px;padding:2px 6px;text-align:right}
 .next{color:var(--mute)}.next b{color:var(--text);font-variant-numeric:tabular-nums}
 footer{max-width:520px;width:100%;margin:0 auto;padding:4px 16px 8px;text-align:center;color:var(--mute);font-size:11px;line-height:1.35;flex-shrink:0}
-@media (max-height:560px){footer,.tagline{display:none}}
+@media (max-height:560px){footer,.tagline,.adslot{display:none}}
 dialog{max-width:420px;width:calc(100% - 32px);background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:20px}
 dialog::backdrop{background:rgba(0,0,0,.7)}
 dialog h2{margin:0 0 12px}
