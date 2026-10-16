@@ -23,6 +23,28 @@ const seed = n => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Ma
 
 $('seg').innerHTML = ZOOM.map(() => '<div class="s" style="flex:1"><i></i></div>').join('')
 
+function fit() {
+  const photo = $('photo'), stack = document.querySelector('.stack'), clue = document.querySelector('.clue')
+  if (!photo || !stack || !clue) return
+  if (!$('end').hidden) { photo.style.width = ''; photo.style.height = ''; photo.style.aspectRatio = ''; return }
+  const seg = $('seg'), hint = $('unlocked'), board = $('board')
+  const segStyle = getComputedStyle(seg)
+  const segH = seg.offsetHeight + parseFloat(segStyle.marginTop) + parseFloat(segStyle.marginBottom)
+  const boardH = board.offsetHeight || 0
+  const boardStyle = getComputedStyle(board)
+  const boardM = boardH ? parseFloat(boardStyle.marginTop) + parseFloat(boardStyle.marginBottom) : 0
+  const avail = stack.clientHeight - segH - hint.offsetHeight - boardH - boardM - 6
+  const maxW = clue.clientWidth
+  if (maxW < 40) return
+  const ph = Math.min(Math.max(avail, 72), maxW * 0.75)
+  const pw = ph * 4 / 3
+  if (Math.abs(photo.offsetHeight - ph) < 2 && Math.abs(photo.offsetWidth - pw) < 2) return
+  photo.style.aspectRatio = 'auto'
+  photo.style.width = pw + 'px'
+  photo.style.height = ph + 'px'
+}
+new ResizeObserver(fit).observe(document.querySelector('.stack'))
+
 async function load() {
   const i = idx, a = LIST[i]
   $('img').removeAttribute('src'); $('loading').hidden = false
@@ -41,11 +63,13 @@ async function load() {
 }
 
 function render() {
-  $('board').innerHTML = state.guesses.map(g => {
+  const board = $('board')
+  board.innerHTML = state.guesses.map(g => {
     if (g === 'SKIP') return `<li class="row skip"><span class="ic" aria-hidden="true">⏭</span><span>Skipped</span></li>`
     if (g === 'RIGHT') return `<li class="row right"><span class="ic" aria-hidden="true">✓</span><span>${esc(item ? item.answer : 'Correct')}</span></li>`
     return `<li class="row wrong"><span class="ic" aria-hidden="true">✕</span><span>${esc(g)}</span></li>`
   }).join('')
+  board.scrollTop = board.scrollHeight
   const s = step()
   ;[...$('seg').children].forEach((el, i) => el.classList.toggle('on', i <= s))
   const left = 6 - state.guesses.length
@@ -128,7 +152,7 @@ input.oninput = () => {
   picked = null; $('submit').disabled = !input.value.trim()
   const q = norm(input.value)
   if (!q) return close()
-  matches = LIST.filter(a => [a.answer, ...a.aliases].some(x => norm(x).includes(q))).map(a => a.answer).sort().slice(0, 8)
+  matches = LIST.filter(a => [a.answer, ...a.aliases].some(x => norm(x).includes(q))).map(a => a.answer).sort().slice(0, 6)
   list.innerHTML = ''; active = -1
   matches.forEach((n, i) => {
     const li = document.createElement('li'); li.id = 'opt' + i; li.setAttribute('role', 'option')
