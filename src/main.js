@@ -24,24 +24,31 @@ const seed = n => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Ma
 $('seg').innerHTML = ZOOM.map(() => '<div class="s" style="flex:1"><i></i></div>').join('')
 
 function fit() {
-  const photo = $('photo'), stack = document.querySelector('.stack'), clue = document.querySelector('.clue')
-  if (!photo || !stack || !clue) return
-  if (!$('end').hidden) { photo.style.width = ''; photo.style.height = ''; photo.style.aspectRatio = ''; return }
+  const photo = $('photo'), stack = document.querySelector('.stack'), clue = document.querySelector('.clue'), sugg = $('sugg')
+  if (!photo || !stack || !clue || !sugg) return
+  if (!$('end').hidden) { photo.style.width = ''; photo.style.height = ''; photo.style.aspectRatio = ''; sugg.style.maxHeight = ''; return }
   const seg = $('seg'), hint = $('unlocked'), board = $('board')
   const segStyle = getComputedStyle(seg)
-  const segH = seg.offsetHeight + parseFloat(segStyle.marginTop) + parseFloat(segStyle.marginBottom)
-  const boardH = board.offsetHeight || 0
-  const boardStyle = getComputedStyle(board)
-  const boardM = boardH ? parseFloat(boardStyle.marginTop) + parseFloat(boardStyle.marginBottom) : 0
-  const avail = stack.clientHeight - segH - hint.offsetHeight - boardH - boardM - 6
+  const chrome = seg.offsetHeight + parseFloat(segStyle.marginTop) + parseFloat(segStyle.marginBottom) + hint.offsetHeight + (board.offsetHeight || 0) + 6
   const maxW = clue.clientWidth
   if (maxW < 40) return
-  const ph = Math.min(Math.max(avail, 72), maxW * 0.75)
+  const open = sugg.children.length > 0
+  const share = stack.clientHeight + (open ? sugg.offsetHeight : 0)
+  const room = Math.max(0, share - chrome)
+  const ideal = Math.min(room, maxW * 0.75)
+  const keep = Math.min(ideal, 220)
+  const suggMax = open ? Math.max(72, Math.min(150, room - keep)) : 0
+  const suggCss = open ? suggMax + 'px' : ''
+  if (sugg.style.maxHeight !== suggCss) sugg.style.maxHeight = suggCss
+  const avail = stack.clientHeight - chrome
+  const ph = Math.max(0, Math.min(avail, maxW * 0.75))
   const pw = ph * 4 / 3
   if (Math.abs(photo.offsetHeight - ph) < 2 && Math.abs(photo.offsetWidth - pw) < 2) return
   photo.style.aspectRatio = 'auto'
   photo.style.width = pw + 'px'
   photo.style.height = ph + 'px'
+  document.getElementById('app').scrollTop = 0
+  window.scrollTo(0, 0)
 }
 new ResizeObserver(fit).observe(document.querySelector('.stack'))
 
@@ -161,7 +168,9 @@ input.oninput = () => {
     list.appendChild(li)
   })
   $('combo').setAttribute('aria-expanded', matches.length > 0)
+  requestAnimationFrame(fit)
 }
+input.addEventListener('focus', () => requestAnimationFrame(fit))
 input.onkeydown = e => {
   if (e.key === 'ArrowDown' && matches.length) { e.preventDefault(); setActive((active + 1) % matches.length) }
   else if (e.key === 'ArrowUp' && matches.length) { e.preventDefault(); setActive((active - 1 + matches.length) % matches.length) }
