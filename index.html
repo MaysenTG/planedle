@@ -5,19 +5,23 @@
 <main id="app">
   <p class="tagline">Guess the aircraft type</p>
   <p id="mode" class="mode" hidden>Practice mode. Play as many aircraft as you like. Stats are not saved. <a href="./">Back to daily</a></p>
-  <div class="photo" id="photo" aria-label="Aircraft photo, partly hidden" role="img"><img id="img" alt="" draggable="false"><p id="loading">Loading photo</p></div>
-  <div class="seg" id="seg" aria-hidden="true"></div>
-  <p class="hint" id="unlocked">Zoom level 1 of 6</p>
-  <ol id="board" class="board" aria-label="Your guesses"></ol>
-  <div id="game">
-    <div class="search" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-owns="sugg" id="combo">
-      <svg class="mag" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z" fill="currentColor"/></svg>
-      <input id="guess" type="text" placeholder="Aircraft type, e.g. Boeing 737" autocomplete="off" aria-label="Guess the aircraft" aria-autocomplete="list" aria-controls="sugg">
-      <ul id="sugg" role="listbox" aria-label="Suggestions"></ul>
-    </div>
-    <div class="actions"><button id="skip" class="btn ghost">Skip (zoom out)</button><button id="submit" class="btn primary" disabled>Submit</button></div>
+  <div class="stage">
+    <div class="photo" id="photo" aria-label="Aircraft photo, partly hidden" role="img"><img id="img" alt="" draggable="false"><p id="loading">Loading photo</p></div>
+    <div class="seg" id="seg" aria-hidden="true"></div>
+    <p class="hint" id="unlocked">Zoom level 1 of 6 · 6 guesses left</p>
   </div>
-  <button id="newOne" class="btn wide newsong" hidden>New aircraft</button>
+  <div class="dock" id="dock">
+    <div id="game">
+      <div class="search" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-owns="sugg" id="combo">
+        <svg class="mag" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z" fill="currentColor"/></svg>
+        <input id="guess" type="text" placeholder="Aircraft type, e.g. Boeing 737" autocomplete="off" aria-label="Guess the aircraft" aria-autocomplete="list" aria-controls="sugg">
+        <ul id="sugg" role="listbox" aria-label="Suggestions"></ul>
+      </div>
+      <div class="actions"><button id="skip" class="btn ghost">Skip (zoom out)</button><button id="submit" class="btn primary" disabled>Submit</button></div>
+    </div>
+    <button id="newOne" class="btn wide newsong" hidden>New aircraft</button>
+  </div>
+  <ol id="board" class="board" aria-label="Your guesses"></ol>
   <section id="end" class="end" hidden aria-live="polite"></section>
   <p id="status" class="sr" aria-live="polite"></p>
 </main>

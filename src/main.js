@@ -41,16 +41,15 @@ async function load() {
 }
 
 function render() {
-  $('board').innerHTML = ZOOM.map((_, i) => {
-    const g = state.guesses[i]
-    if (g === undefined) return `<li class="row ${i === state.guesses.length && !state.done ? 'next' : ''}"><span class="n">${i + 1}</span></li>`
+  $('board').innerHTML = state.guesses.map(g => {
     if (g === 'SKIP') return `<li class="row skip"><span class="ic" aria-hidden="true">⏭</span><span>Skipped</span></li>`
     if (g === 'RIGHT') return `<li class="row right"><span class="ic" aria-hidden="true">✓</span><span>${esc(item ? item.answer : 'Correct')}</span></li>`
     return `<li class="row wrong"><span class="ic" aria-hidden="true">✕</span><span>${esc(g)}</span></li>`
   }).join('')
   const s = step()
   ;[...$('seg').children].forEach((el, i) => el.classList.toggle('on', i <= s))
-  $('unlocked').textContent = state.done ? 'Full photo' : `Zoom level ${s + 1} of 6`
+  const left = 6 - state.guesses.length
+  $('unlocked').textContent = state.done ? 'Full photo' : `Zoom level ${s + 1} of 6 · ${left} guess${left === 1 ? '' : 'es'} left`
   const img = $('img')
   img.style.transformOrigin = `${focus[0]}% ${focus[1]}%`
   img.style.transform = `scale(${ZOOM[s]})`
@@ -95,6 +94,8 @@ function countdown() {
 
 function showEnd() {
   $('game').hidden = true
+  $('newOne').hidden = true
+  $('dock').hidden = true
   const e = $('end'); e.hidden = false
   const lic = item.licenseUrl ? `<a href="${esc(item.licenseUrl)}" target="_blank" rel="noopener">${esc(item.license)}</a>` : esc(item.license)
   e.innerHTML = `<p class="verdict ${state.won ? 'win' : 'lose'}">${state.won ? `You got it in ${state.guesses.length}!` : "Not today. Here's the answer."}</p>
@@ -102,7 +103,9 @@ function showEnd() {
   <p class="credit">Photo by ${esc(item.author)}, ${lic}, via <a href="${esc(item.page)}" target="_blank" rel="noopener">Wikimedia Commons</a></p></div>
   <p class="sq" aria-label="Your result">${squares()}</p>
   <button id="share" class="btn primary wide">Share result</button>
-  ${PRACTICE ? '<p class="next">Practice round. Stats are not saved.</p>' : `${statsHtml()}<p class="next">Next aircraft in <b id="cd">--:--:--</b></p>`}`
+  ${PRACTICE ? '<p class="next">Practice round. Stats are not saved.</p><button id="again" class="btn wide newsong">New aircraft</button>' : `${statsHtml()}<p class="next">Next aircraft in <b id="cd">--:--:--</b></p>`}`
+  const again = $('again')
+  if (again) again.onclick = newOne
   $('share').onclick = async () => {
     const txt = `Planedle ${PRACTICE ? 'practice' : '#' + (dayNum + 1)}\n✈️${squares()}\n${location.origin + location.pathname}`
     try { if (navigator.share && matchMedia('(pointer:coarse)').matches) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); $('share').textContent = 'Copied to clipboard' } } catch {}
@@ -161,7 +164,7 @@ function newOne() {
   const others = LIST.map((_, i) => i).filter(i => i !== idx)
   idx = others[Math.floor(Math.random() * others.length)]
   state = fresh(); item = null
-  $('end').hidden = true; $('end').innerHTML = ''; $('game').hidden = false
+  $('end').hidden = true; $('end').innerHTML = ''; $('dock').hidden = false; $('game').hidden = false; $('newOne').hidden = false
   render(); load().then(() => say('New aircraft loaded')).catch(() => say('Could not load the photo. Try again.'))
 }
 if (PRACTICE) {
