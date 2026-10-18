@@ -33,8 +33,8 @@ export const ADS = {
 
 export const KOFI = {
   enabled: true,
-  text: 'Support me on Ko-fi',
-  color: '#72a4f2',
+  text: 'Ko-fi',
+  color: '#3a3f4a',
   id: 'P0L528ZW9A',
   script: 'https://storage.ko-fi.com/cdn/widget/Widget_2.js'
 }
@@ -93,8 +93,6 @@ function loadKofiWidget() {
 }
 
 async function fillKofi(el) {
-  el.classList.add('kofi')
-  el.setAttribute('aria-label', 'Support on Ko-fi')
   try {
     const widget = await loadKofiWidget()
     // Prefer getHTML over draw(): draw() uses document.writeln and would wipe the page.
@@ -106,16 +104,20 @@ async function fillKofi(el) {
 }
 
 export function mountAds(practice) {
-  document.querySelectorAll('[data-ad]').forEach(el => {
-    if (ADS.enabled) {
-      el.classList.remove('kofi')
-      fill(el, practice)
-      return
-    }
-    if (KOFI.enabled) {
-      fillKofi(el)
-      return
-    }
-    el.hidden = true
-  })
+  const slots = document.querySelectorAll('[data-ad]')
+  const support = document.querySelector('[data-kofi]')
+
+  if (ADS.enabled) {
+    if (support) support.hidden = true
+    slots.forEach(el => fill(el, practice))
+    return
+  }
+
+  slots.forEach(el => { el.hidden = true })
+  if (KOFI.enabled && support) {
+    support.hidden = false
+    fillKofi(support)
+    return
+  }
+  if (support) support.hidden = true
 }

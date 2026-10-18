@@ -1,5 +1,5 @@
 import LIST from './aircraft.json'
-import { mountAds } from './ads.js'
+import { ADS, mountAds } from './ads.js'
 const ZOOM = [6, 4, 2.8, 2, 1.4, 1]
 const $ = id => document.getElementById(id)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
