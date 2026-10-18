@@ -2,8 +2,11 @@
 // Until then, the labeled house banners below are what players see.
 // When you add a client id, also add public/ads.txt:
 // google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+//
+// Ads are off while Ko-fi is shown in the same slots. Set ADS.enabled back to
+// true (and KOFI.enabled to false) to bring ads back without rewriting this file.
 export const ADS = {
-  enabled: true,
+  enabled: false,
   adsense: {
     client: '',
     slots: { top: '', end: '' }
@@ -26,6 +29,14 @@ export const ADS = {
       cta: 'Play'
     }
   ]
+}
+
+export const KOFI = {
+  enabled: true,
+  text: 'Support me on Ko-fi',
+  color: '#72a4f2',
+  id: 'P0L528ZW9A',
+  script: 'https://storage.ko-fi.com/cdn/widget/Widget_2.js'
 }
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
@@ -67,12 +78,44 @@ function fill(el, practice) {
   el.innerHTML = houseBanner(pick)
 }
 
+let kofiLoad = null
+function loadKofiWidget() {
+  if (window.kofiwidget2) return Promise.resolve(window.kofiwidget2)
+  if (kofiLoad) return kofiLoad
+  kofiLoad = new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = KOFI.script
+    script.onload = () => resolve(window.kofiwidget2)
+    script.onerror = () => reject(new Error('Could not load Ko-fi widget'))
+    document.head.appendChild(script)
+  })
+  return kofiLoad
+}
+
+async function fillKofi(el) {
+  el.classList.add('kofi')
+  el.setAttribute('aria-label', 'Support on Ko-fi')
+  try {
+    const widget = await loadKofiWidget()
+    // Prefer getHTML over draw(): draw() uses document.writeln and would wipe the page.
+    widget.init(KOFI.text, KOFI.color, KOFI.id)
+    el.innerHTML = widget.getHTML()
+  } catch {
+    el.innerHTML = `<div class="btn-container"><a class="kofi-button" style="background-color:${esc(KOFI.color)}" href="https://ko-fi.com/${esc(KOFI.id)}" target="_blank" rel="noopener">${esc(KOFI.text)}</a></div>`
+  }
+}
+
 export function mountAds(practice) {
   document.querySelectorAll('[data-ad]').forEach(el => {
-    if (!ADS.enabled) {
-      el.hidden = true
+    if (ADS.enabled) {
+      el.classList.remove('kofi')
+      fill(el, practice)
       return
     }
-    fill(el, practice)
+    if (KOFI.enabled) {
+      fillKofi(el)
+      return
+    }
+    el.hidden = true
   })
 }

@@ -17,4 +17,4 @@ All photos come from Wikimedia Commons under free licences. The app only stores 
 
 ## Notes
 
-This is a fan project inspired by Heardle and Wordle. Banner ads are set in `src/ads.js`.
+This is a fan project inspired by Heardle and Wordle. The Ko-fi support button and the unused ad setup both live in `src/ads.js`.
